@@ -1,0 +1,17 @@
+{
+  "name": "my-own-angularjs",
+  "version": "0.1.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "lint": "jshint src"
+  },
+  "author": "Luca Leone",
+  "license": "MIT",
+  "devDependencies": {
+    "jshint": "^2.10.2"
+  }
+}
