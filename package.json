@@ -1,17 +1,36 @@
 {
   "name": "my-own-angularjs",
   "version": "0.1.0",
-  "description": "",
+  "description": "Building my own angular framework by working through the book Build Your Own AngularJS by @teropa",
   "main": "index.js",
   "directories": {
     "test": "test"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/luc4leone/my-angular"
+  },
   "scripts": {
-    "lint": "jshint src"
+    "lint": "jshint src test",
+    "test": "karma start"
   },
   "author": "Luca Leone",
   "license": "MIT",
   "devDependencies": {
-    "jshint": "^2.10.2"
+    "browserify": "^16.5.0",
+    "jasmine-core": "^3.4.0",
+    "jshint": "^2.10.2",
+    "karma": "^4.2.0",
+    "karma-browserify": "^6.1.0",
+    "karma-jasmine": "^2.0.1",
+    "karma-jshint-preprocessor": "0.0.6",
+    "karma-phantomjs-launcher": "^1.0.4",
+    "phantomjs-prebuilt": "^2.1.16",
+    "sinon": "^7.4.1",
+    "watchify": "^3.11.1"
+  },
+  "dependencies": {
+    "jquery": "^3.4.1",
+    "lodash": "^4.17.15"
   }
 }
