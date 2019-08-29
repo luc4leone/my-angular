@@ -166,10 +166,9 @@ I guess `npm` creates the `env` and the `modules/.bin` dir. So everything looks 
 
 ## Answer
 
-shadowspawn
-John Gee
-Regular
-8h
+@shadowspawn  
+John Gee  
+
 Most shell commands set the shell exit code (status) when they detect a problem. This is what jshint is doing, and is what I expect when a program like this finds something to report.
 
 npm run displays error information when it detects the exit code was set by the script. Since npm does not know what the script displayed and how clear the failure was, it makes sure you know something went wrong!
