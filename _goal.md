@@ -6,69 +6,77 @@ The goal is to study 3 sections x day, min 1.
 
 - [x] 1. Scope Objects
 - [x] 2. Watching Object Properties: $watch And $digest
-- [ ] 3. Checking for Dirty Values
 
 26 agosto 2019
 
-- [ ] 4. Initializing Watch Values
-- [ ] 5. Getting Notified Of Digests
-- [ ] 6. Keeping The Digest Going While It Stays Dirty
+- [x] 3. Checking for Dirty Values
+- [x] 4. Initializing Watch Values
 
 27 agosto 2019
 
-- [ ] 7. Giving Up On An Unstable Digest
-- [ ] 8. Short-Circuiting The Digest When The Last Watch Is Clean
-- [ ] 9. Value-Based Dirty-Checking
+- [x] 5. Getting Notified Of Digests
+- [x] 6. Keeping The Digest Going While It Stays Dirty
 
 28 agosto 2019
 
-- [ ] 10. NaNs
-- [ ] 11. Handling Exceptions
-- [ ] 12. Destroying A Watch
+- [ ] 7. Giving Up On An Unstable Digest
+- [ ] 8. Short-Circuiting The Digest When The Last Watch Is Clean
 
 29 agosto 2019
 
-- [ ] 13. $eval - Evaluating Code In The Context of A Scope
-- [ ] 14. $apply - Integrating External Code With The Digest Cycle
-- [ ] 15. $evalAsync - Deferred Execution
+- [ ] 9. Value-Based Dirty-Checking
+- [ ] 10. NaNs
 
 30 agosto 2019
 
-- [ ] 16. Scheduling $evalAsync from Watch Functions
-- [ ] 17. Scope Phases
-- [ ] 18. Coalescing $apply Invocations - $applyAsync
+- [ ] 11. Handling Exceptions
+- [ ] 12. Destroying A Watch ***
 
 31 agosto 2019
 
-- [ ] 19. Running Code After A Digest - $$postDigest
-- [ ] 20. Handling Exceptions
-- [ ] 21. Watching Several Changes With One Listener: $watchGroup
+- [ ] 13. $eval - Evaluating Code In The Context of A Scope
+- [ ] 14. $apply - Integrating External Code With The Digest Cycle
 
 1 settembre 2019
 
+- [ ] 15. $evalAsync - Deferred Execution
+- [ ] 16. Scheduling $evalAsync from Watch Functions
+
+2 settembre 2019
+
+- [ ] 17. Scope Phases
+- [ ] 18. Coalescing $apply Invocations - $applyAsync
+
+3 settembre 2019
+
+- [ ] 19. Running Code After A Digest - $$postDigest
+- [ ] 20. Handling Exceptions
+
+4 settembre 2019
+
+- [ ] 21. Watching Several Changes With One Listener: $watchGroup
 - [ ] 22. The Root Scope
+
+5 settembre 2019
+
 - [ ] 23. Making A Child Scope
 - [ ] 24. Attribute Shadowing
 
-2 settembre 2019
 
 - [ ] 25. Separated Watches
 - [ ] 26. Recursive Digestion
 - [ ] 27. Digesting The Whole Tree from $apply, $evalAsync, and $applyAsyn
 
-3 settembre 2019
 
 - [ ] 28. Isolated Scopes
 - [ ] 29. Substituting The Parent Scope
 - [ ] 30. Destroying Scopes
 
-4 settembre 2019
 
 - [ ] 31. Setting Up The Infrastructure
 - [ ] 32. Detecting Non-Collection Changes
 - [ ] 33. Detecting New Arrays
 
-5 settembre 2019
 
 - [ ] 34. Detecting New Or Removed Items in Arrays
 - [ ] 35. Detecting Replaced or Reordered Items in Arrays
