@@ -254,6 +254,7 @@ describe('scope', function() {
     });
 
     it('compares based on value if enabled', function() {
+      // set aValue field on scope; initialize it to an array of numbers
       scope.aValue = [1, 2, 3];
       scope.counter = 0;
 
@@ -268,9 +269,222 @@ describe('scope', function() {
       scope.$digest();
       expect(scope.counter).toBe(1);
 
+      // when I push 4 to aValue, the array address is the same
+      // that means that if I compare by reference, I will not see the change
+      // thus I will not call the listener, thus the counter will be 1
       scope.aValue.push(4);
       scope.$digest();
       expect(scope.counter).toBe(2);
+    });
+
+    it('correctly handles NaNs', function() {
+      scope.number = 0/0; // results in a NaN type
+      scope.counter = 0;
+
+      scope.$watch(
+        function(scope) { return scope.number; },
+        function(newValue, oldValue, scope) {
+          scope.counter++;
+        }
+      );
+
+      scope.$digest();
+      // we expect the counter to be 1 because there's the change from
+      // last == initWatchVal to newValue == NaN
+      expect(scope.counter).toBe(1);
+
+      scope.$digest();
+      // now last == NaN and newValue is still NaN, so I would expect counter
+      // to still be 1, but that's not the case if I don't improve the code
+      // resposible for the comparison, accounting for the fact that NaN is not
+      // equal to NaN
+      expect(scope.counter).toBe(1);
+    });
+
+    it('catches exceptions in watch functions and continues', function() {
+      scope.aValue = 'abc';
+      scope.counter = 0;
+
+      // first watch throws an exception
+      scope.$watch(
+        function(scope) { throw 'Error'; },
+        function(newValue, oldValue, scope) { }
+      );
+      // second watch has a counter in the listener
+      scope.$watch(
+        function(scope) { return scope.aValue; },
+        function(newValue, oldValue, scope) {
+          scope.counter++;
+        }
+      );
+
+      scope.$digest();
+      // we check that even if we have an exception on the first watch, the
+      // second is executed
+      expect(scope.counter).toBe(1);
+    });
+
+    it('catches exceptions in listener functions and continues', function() {
+      scope.aValue = 'abc';
+      scope.counter = 0;
+
+      scope.$watch(
+        function(scope) { return scope.aValue; },
+        function(newValue, oldValue, scope) {
+          throw 'Error';
+        }
+      );
+      scope.$watch(
+        function(scope) { return scope.aValue; },
+        function(newValue, oldValue, scope) {
+          scope.counter++;
+        }
+      );
+
+      scope.$digest();
+      // we check that even if we have an exception on the first listener's
+      // watcher, the second is executed
+      expect(scope.counter).toBe(1);
+    });
+
+    it('allows destroying a $watch with a removal function', function() {
+      scope.aValue = 'abc';
+      scope.counter = 0;
+
+      // scope.$watch() will setup a watcher as usual, but we save its 
+      // returned value into the variable destroyWatch
+      var destroyWatch = scope.$watch(
+        function(scope) { return scope.aValue; },
+        function(newValue, oldValue, scope) {
+          scope.counter++;
+        }
+      );
+
+      scope.$digest();
+      expect(scope.counter).toBe(1);
+
+      scope.aValue = 'def';
+      scope.$digest();
+      expect(scope.counter).toBe(2);
+
+      scope.aValue = 'ghi';
+      // calling destroyWatch should destroy the watch
+      destroyWatch();
+      scope.$digest();
+      // since the watch is destroyed, we expect the counter not to increase
+      // after calling the digest
+      expect(scope.counter).toBe(2);
+    });
+
+    it('allows destroying a $watch during digest', function() {
+      scope.aValue = 'abc';
+
+      // to check later that the watches are iterated in the correct order
+      var watchCalls = [];
+
+      // first watch
+      scope.$watch(
+        function(scope) {
+          watchCalls.push('first');
+          return scope.aValue;
+        }
+      );
+
+      // second watch, it removes itself
+      var destroyWatch = scope.$watch(
+        function(scope) {
+          watchCalls.push('second');
+          destroyWatch();
+        }
+      );
+
+      // third watch
+      scope.$watch(
+        function(scope) {
+          watchCalls.push('third');
+          return scope.aValue;
+        }
+      );
+
+      scope.$digest();
+      expect(watchCalls).toEqual(['first', 'second', 'third', 'first', 'third']);
+
+      // a test in the console to understand why this test doen not pass
+      // var a = [1,2,3];
+      // var arr = [];
+      // _.forEach(a, function(n, i) {
+      //   arr.push(n);
+      //   if (i == 1) a.splice(i,1);
+      // });
+      // a
+      // [1, 3]
+      // arr
+      // [1, 2, undefined]
+
+      /**
+        With push I get:
+          watchers = [1,2,3]
+
+        watchCalls = []
+        watcher.length = 3
+        | index | watchers before | watchCalls      | watchers after |
+        | 0     | [1,2,3]         | [1]             | [1,2,3]        |
+        | 1     | [1,2,3]         | [1,2]           | [1,3]          |
+        | 2     | [1,3]           | [1,2,undefined] | [1,3]          |
+        
+        I can test this table:
+        
+         function forEach(array, callback) {
+           var length = array.length;
+            for (var i = 0; i < length; i++) {
+              callback(array[i], i, array);
+            }
+          };
+          undefined
+          var a = [1,2,3];
+          var arr = [];
+          forEach(a, function(n, i) {
+            arr.push(n);
+            if (i == 1) a.splice(i,1);
+          });
+          undefined
+          a
+          (2) [1, 3]
+          arr
+          (3) [1, 2, undefined]
+          
+        When I use unshift instead of push I get:
+          watchers = [3,2,1]
+        Then I use forEachRight:
+
+        | index | watchers before | watchCalls | watchers after |
+        | 2     | [3,2,1]         | [1]        | [3,2,1]        |
+        | 1     | [3,2,1]         | [1,2]      | [3,1]          |
+        | 0     | [3,1]           | [1,2,3]    | [3,1]          |
+
+        I can test this table:
+
+          function forEachRight(array, callback) {
+            var length = array.length;
+            for (var i = length - 1; i >= 0; i--) {
+              callback(array[i], i, array);
+            }
+          };
+
+          var a = [1,2,3];
+          var arr = [];
+          forEachRight(a, function(n, i) {
+            arr.unshift(n);
+            if (i == 1) a.splice(i,1);
+          });
+          undefined
+          a
+          (2) [1, 3]
+          arr
+          (3) [1, 2, 3]
+
+       */
+
     });
 
 
