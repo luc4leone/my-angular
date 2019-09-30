@@ -8,8 +8,6 @@
   <script>
 'use strict';
 
-'use strict';
-
 function initWatchVal() { }
 
 function Scope() {
@@ -82,10 +80,20 @@ Scope.prototype.$$areEqual = function(newValue, oldValue, valueEq) {
   }
 };
 
-module.exports = Scope;
 
 /* PLAY IN THE CONSOLE
 
+var scope = new Scope();
+scope.babysitter = 'Valeria';
+scope.num = 3;
+scope;
+
+var destroyBabysitter = scope.$watch(
+  function(){return scope.babysitter},
+  function() {
+    console.log('ah this is the new babysitter:', scope.babysitter)
+  });
+scope.$$watchers
 
 */
 </script>
