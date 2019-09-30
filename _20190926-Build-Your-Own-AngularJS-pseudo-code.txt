@@ -1,0 +1,597 @@
+//
+
+CH. 1 SCOPE OBJECTS
+
+* function Scope() { }
+
+
+
+//
+
+WATCHING OBJECT PROPERTIES
+
+function Scope() { 
+* $$watchers = []
+}
+
+* $watch = function(watchFn, listenerFn) {
+*   var watcher = {
+*     watchFn: watchFn
+*     listenerFn: listenerFn
+*   }
+*   $$watchers.push(watcher)
+* }
+
+* $digest = function() {
+*   loop $$watchers*     watcher.listenerFn()
+* };
+
+
+
+//
+
+DIRTY CHECKING
+
+$digest = function() {
+  loop $$watchers
+*   watcher.watchFn(self)    watcher.listenerFn()
+}
+
+$digest = function() {
+  loop $$watchers
+*   newValue = watcher.watchFn(self)*   oldValue = watcher.last
+*   if (watcher == dirty) {
+*     update last to newValue
+      watcher.listenerFn()
+*   }
+}
+
+
+
+//
+
+INITIALIZING WATCH VALUES
+
+$watch = function(watchFn, listenerFn) {
+  var watcher = {
+    watchFn: watchFn
+    listenerFn: listenerFn
+*   last: initiWatchVal
+  }
+  $$watchers.push(watcher)
+}
+
+$digest = function() {
+  loop $$watchers
+    newValue = watcher.watchFn(self)    oldValue = watcher.last
+    if (watcher == dirty) {
+      update last to newValue
+*     watcher.listenerFn(newValue, oldValue, self)
+    }
+}
+
+
+
+//
+
+GET NOTIFIED OF DIGESTS
+
+$watch = function(watchFn, listenerFn) {
+  var watcher = {
+    watchFn: watchFn
+*   listenerFn: listenerFn || function() {}
+    last: initiWatchVal
+  }
+  $$watchers.push(watcher)
+}
+
+
+
+// 
+
+KEEP DIGEST GOING IF (A WATCHER) IS DIRTY 
+
+$digest = function() {
+* var dirty=undefined
+* do {
+*   dirty: $$digestOnce()
+* } while (dirty)
+};
+
+* $$digestOnce = function() {
+*   loop $$watchers
+*     if (newValue != oldValue) {
+*       watcher.listenerFn()
+*       dirty = true
+*     }
+*   return dirty
+* }
+
+
+
+// 
+
+STOP UNSTABLE DIGEST 
+
+$digest = function() {
+  var dirty=undefined
+  do {
+    dirty = this.$$digestOnce()
+*   if (dirty=true && loop-round>10) throw exception
+  } while (dirty=true)
+}
+
+
+
+// 
+
+END LOOP WHEN A CLEAN WATCHER IS ALSO THE LAST DIRTY (OPTIMIZATION)
+
+$$digestOnce = function() {
+  loop $$watchers
+    if (watcher is dirty) {
+*   $$lastDirtyWatch = watcher
+      watcher.listenerFn()
+      dirty = true
+*   } else if (watcher is clean == watcher is last dirty) {
+*     return false
+*   }
+  return dirty
+}
+
+$watch = function(watchFn, listenerFn) {
+  var watcher = {
+    watchFn: watchFn,
+    listenerFn: listenerFn
+  }
+  $$watchers.push(watcher)
+  // disabling the optimization
+* $$lastDirtyWatch = null
+};
+
+
+
+//
+
+COMPARE BY VALUE DIRTY CHECKING
+
+* $watch = function(watchFn, listenerFn, valueEq) {
+    var watcher = {
+      watchFn: watchFn
+      listenerFn: listenerFn || function() {}
+      // if valueEq=undefined then compare by ref
+*     valueEq: !!valueEq
+      last: initWatchVal
+    }
+    $$watchers.push(watcher)
+    $$lastDirtyWatch = null
+  };
+
+
+* $$areEqual = function(newValue, oldValue, valueEq) {
+*   // compare by value
+*   if (valueEq) 
+*     return _.isEqual(newValue, oldValue)
+*   // compare by reference
+*   else 
+*     return newValue == oldValue
+* }
+
+$$digestOnce = function() {
+  loop $$watchers
+*   if ($$areEqual()) { 
+    $$lastDirtyWatch = watcher
+*     watcher.last = (by value) ? newValueCopy : newValue
+      watcher.listenerFn()
+      dirty = true
+    } else if (clean watcher == last dirty) {
+      return false
+    }
+  return dirty
+}
+
+
+
+//
+
+REFERENCE BASED DIRTY CHECKING: HANDLING NaN 
+
+just a more complex else block of $$areEqual
+
+
+
+//
+
+HANDLING EXCEPTIONS
+
+$$digestOnce = function() {
+  loop $$watchers
+*   try {
+      if ($$areEqual()) { 
+      $$lastDirtyWatch = watcher
+        watcher.last = (by value) ? copy : newValue
+        watcher.listenerFn()
+        dirty = true
+      } else if (clean watcher == last dirty) {
+        return false
+      }
+*   } catch(e) {
+*     log e
+*   }
+  return dirty
+}
+
+
+
+// 
+
+REMOVE WATCHER
+
+$watch = function(watchFn, listenerFn, valueEq) {
+  var watcher = {
+    watchFn: watchFn
+    listenerFn: listenerFn || function() {}
+    valueEq: !!valueEq
+    last: initWatchVal
+  }
+  $$watchers.push(watcher)
+  $$lastDirtyWatch = null
+* return function() { 
+*   $$watchers.splice(watcherIndex, 1) 
+* }
+}
+
+// edge cases handled with unshift() and forEachRight()
+
+
+
+//
+
+CH2. SCOPE METHODS
+
+RUN CODE IN SCOPE CONTEXT
+
+* $eval = function(cb, locals) {
+*   return cb(this, locals)
+* }
+
+
+
+//
+
+RUN CODE IN SCOPE CONTEXT + DIGEST
+
+* $apply = function(cb) {
+*   try {
+*     return this.$eval(cb)
+*   } finally {
+*     $digest()
+*   }
+* }
+
+
+
+// 
+
+RUN LATER - $evalAsync IN listenerFn
+
+function Scope() {
+  $$watchers = []
+  $$lastDirtyWatcher = null
+* $$asyncQueue = []
+}
+
+* $evalAsync = function(cb) {
+*   $$asyncQueue.push({scope: this, expression: cb})
+* }
+
+$digest = function() {
+  var dirty=undefined
+  do {
+*    while ($$asyncQueue is not empty) {
+*      take the fn out of queue
+*      $eval each item
+*    }
+    dirty = this.$$digestOnce()
+    if (dirty=true && loop-round>10) throw exception
+  } while (dirty=true)
+}
+
+
+
+//
+
+RUN LATER - $evalAsync IN watchFn 
+
+$digest = function() {
+  var dirty=undefined
+  do {
+     while ($$asyncQueue is not empty) {
+       take the fn out of queue
+       $eval each item
+     }
+    dirty = this.$$digestOnce()
+    if (dirty=true && loop-round>10) throw exception
+* } while (dirty=true || $$asyncQueue.length)
+}
+
+$digest = function() {
+  var dirty=undefined
+  do {
+     while ($$asyncQueue is not empty) {
+       take the fn out of queue
+       $eval each item
+     }
+    dirty = this.$$digestOnce()
+*   if ((dirty || $$asyncQueue.length) && loop-round>10) 
+      { throw exception }
+  } while (dirty=true || $$asyncQueue.length)
+}
+
+
+
+//
+
+SCOPE PHASES
+
+function Scope() {
+  $$watchers = []
+  $$lastDirtyWatcher = null
+  $$asyncQueue = []
+* $$phase = null
+}
+
+* $beginPhase = function(phase) {
+*   if ($$phase) throw $$phase + ' already in progress'
+*   $$phase = phase
+* }
+
+* $clearPhase = function() {
+*   $$phase = null
+* }
+
+$digest = function() {
+  var dirty=undefined
+* $beginPhase('$digest')
+  do {
+     while ($$asyncQueue is not empty) {
+       take the fn out of queue
+       $eval each item
+     }
+    dirty = this.$$digestOnce()
+    if ((dirty || $$asyncQueue.length) && loop-round>10) {
+*     $clearPhase()     
+      throw exception 
+    }
+  } while (dirty=true || $$asyncQueue.length)
+* $clearPhase()
+}
+
+$apply = function(cb) {
+  try {
+*   $beginPhase('$apply')
+    return this.$eval(cb)
+  } finally {
+*   clearPhase()
+    $digest()
+  }
+}
+
+$evalAsync = function(cb) {
+* if (not in digest or apply phase and have async task in queue) {
+*   setTimeout(run $digest)
+* }
+  $$asyncQueue.push({scope: this, expression: cb})
+}
+
+
+
+//
+
+MERGING $apply CALLS: $applyAsync
+
+function Scope() {
+  $$watchers = []
+  $$lastDirtyWatcher = null
+  $$asyncQueue = []
+* $$applyAsyncQueue = []
+  $$phase = null
+}
+
+* $applyAsync = function(cb) {
+*   $$applyAsyncQueue.push(function(){ $eval(cb) })
+*   setTimeout(function() {
+*     // $apply is called once
+*     $apply(function() {
+*       while (task in queue) {
+*         take the task out of queue
+*         run task
+*       }
+*     })
+*   })
+* }
+
+function Scope() {
+  $$watchers = []
+  $$lastDirtyWatcher = null
+  $$asyncQueue = []
+  $$applyAsyncQueue = []
+  // keep track of whether a setTimeout has already been scheduled
+* $$applyAsyncId = null
+  $$phase = null
+}
+
+$applyAsync = function(cb) {
+  $$applyAsyncQueue.push(function(){ $eval(cb) })
+* if ($$applyAsyncId == null) {
+    $$applyAsyncId = setTimeout(function() {
+      $apply(function() {
+        while (task in queue) {
+          take the task out of queue
+          run task
+        }
+*       $$applyAsyncId = null
+      })
+    })
+* }
+}
+
+// extracting from $applyAsync
+* $$flushApplyAsync = function() {
+*   while (task in queue) {
+*     take the task out of queue
+*     run task
+*   }
+*   $$applyAsyncId = null
+* }
+
+
+$applyAsync = function(cb) {
+  $$applyAsyncQueue.push(function(){ $eval(cb) })
+  if ($$applyAsyncId == null) {
+    $$applyAsyncId = setTimeout(function() {
+*       $apply($$flushApplyAsync.bind(self))
+      })
+    })
+  }
+}
+
+// if there’s an $applyAsync flush timeout currently pending, we cancel it and flush the work immediately
+$digest = function() {
+  var dirty=undefined
+  $beginPhase('$digest')
+* if ($$applyAsyncId) {
+*   clearTimeout()
+*   flushApplyAsync()   
+* }
+  do {
+     while ($$asyncQueue is not empty) {
+       take the fn out of queue
+       $eval each item
+     }
+    dirty = this.$$digestOnce()
+    if ((dirty || $$asyncQueue.length) && loop-round>10) {
+      $clearPhase()     
+      throw exception 
+    }
+  } while (dirty=true || $$asyncQueue.length)
+  $clearPhase()
+}
+
+
+
+//
+
+RUNNING CODE AFTER A DIGEST - $$postDiget
+
+function Scope() 
+  $$watchers = []
+  $$lastDirtyWatcher = null
+  $$asyncQueue = []
+  $$applyAsyncQueue = []
+  $$applyAsyncId = null
+* $$postDigestQueue = [] 
+  $$phase = null
+
+
+* function $$postDigest(cb)
+*   push cb in queue
+
+$digest = function() 
+  var dirty=undefined
+  $beginPhase('$digest')
+  if ($$applyAsyncId)
+    clearTimeout()
+    flushApplyAsync()   
+  do {
+    while ($$asyncQueue is not empty)
+      take the fn out of queue
+      $eval each item
+    dirty = this.$$digestOnce()
+    if ((dirty || $$asyncQueue.length) && loop-round>10)
+      $clearPhase()     
+      throw exception 
+  } while (dirty=true || $$asyncQueue.length)
+  $clearPhase()
+* while ($$postDigestQueue is not empty)
+*   take the task out of queue
+*   run the task
+
+
+
+//
+
+HANDLING EXCEPTIONS
+
+#Q: "We use two error-throwing functions, because if we used just one, the second function would indeed run. That’s because $apply launches $digest, and the $applyAsync queue is drained from a finally block therein". Is it clear the part: "...$applyAsync queue is drained from a finally block therein" ?
+
+// to understand: making functions even more terse, e.g.:
+
+$apply = function(cb)
+  $eval(cb)
+  $digest()
+
+
+// will not wrap in try...catch calls in $digest and $$flushApplyAsync
+
+
+
+// WATCHING SEVERAL CHANGES WITH 1 LISTENER: $watchGroup
+
+
+* $watchGroup = function(watchFns, listenerFn) 
+*  loop watchFns
+*    $watch(watchFn, listenerFn)
+
+$watchGroup = function(watchFns, listenerFn)
+ newValues, oldValues
+ loop watchFns
+   $watch(watchFn, function(newValue, oldValue) {
+     
+   })
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
