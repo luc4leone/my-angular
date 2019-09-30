@@ -15,6 +15,12 @@ function Scope() {
   // to minimize the n of watchFn executions let's keep track of the last
   // dirty watch
   this.$$lastDirtyWatch = null;
+  // to store $evalAsync tasks that have been deferred
+  this.$$asyncQueue = [];
+  // a new queue for applyAsync
+  this.$$applyAsyncQueue = [];
+  this.$$applyAsyncId = null;
+  this.$$phase = null;
 }
 
 // unique value for watcher.last
@@ -35,8 +41,8 @@ Scope.prototype.$watch = function(watchFn, listenerFn, valueEq) {
     // will trigger the call of the listener
     last: initWatchVal
   };
-  // was 'push'. it's 'unshift' to handle a handle the case of a watch that
-  // destroy itself during a digest. why?
+  // was 'push'. it's 'unshift' to handle the case of a watch that
+  // destroys itself during a digest
   this.$$watchers.unshift(watcher);
   // let's reset the last dirty watch when a watch is added
   this.$$lastDirtyWatch = null;
@@ -47,9 +53,12 @@ Scope.prototype.$watch = function(watchFn, listenerFn, valueEq) {
     var index = self.$$watchers.indexOf(watcher);
     // if the watcher exists
     if (index >= 0) {
+      // destroy it
       self.$$watchers.splice(index, 1);
+      // reset last dirty watch to null to fix test 'allows a $watch to destroy another during digest'
+      self.$$lastDirtyWatch = null;
     }
-  }
+  };
 };
 
 Scope.prototype.$digest = function() {
@@ -60,19 +69,52 @@ Scope.prototype.$digest = function() {
   // whenever a new digest begins we reset the last dirty watch, so we make
   // sure that we don't take the last digest lastDirtyWatch
   this.$$lastDirtyWatch = null;
-  // this.$$lastDirtyWatch = null;
+  // let’s set the phase as ”$digest” for the duration of the outer digest loop:
+  this.$beginPhase('$digest');
   // do at least one pass, then another only if dirty is true, meaning at least
   // a watch was dirty (when no watch was dirty the situation is deemed stable)
   do {
+    // if the queue is not empty, let's run the tasks $evalAsync
+    // put into the tasks queue
+
+    // from the book: "The implementation guarantees that if you defer a
+    // function while the scope is still dirty, the function will
+    // be invoked later but still during the same digest. That satisfies
+    // our unit test: 'executes given function later in the same cycle'"
+    // in my own words:
+      // the following while statement is into the digest method,
+      // so it must be run by the end of the digest run.
+      // first time digest is run, dirty is undefined, no tasks
+      // are in the queue, while condition is false, while block is not run.
+      // dirty is set to true, because the first time a watcher is
+      // always dirty, so we go to digest second iteration.
+      // before running $$digestOnce, this time we run the while block,
+      // since the queue is not empty, meaning we run the code that was
+      // deferred in the listener.
+      // then we go into $$digestOnce, the watcher is clean, so we don't
+      // run the listener
+    while (this.$$asyncQueue.length) {
+      // first task in the queue
+      var asyncTask = this.$$asyncQueue.shift();
+      // run the deferred code
+      asyncTask.scope.$eval(asyncTask.expression);
+    }
     dirty = this.$$digestOnce();
-    // throw exception for a digest that's never stable (at least one watch
-    // is dirty at each round)
-    if (dirty && !(ttl--)) {
+    // ttl check: throw exception for a digest that's never stable (at least one watch is dirty at each round)
+    // to make the test 'eventually halts $evalAsyncs added by watches'
+    // pass added the || part of the condition
+    if ((dirty || this.$$asyncQueue.length) && !(ttl--)) {
+      this.$clearPhase();
       throw '10 digest iterations reached';
     }
-  } while (dirty);
+  // condition was just dirty, meaning dirty==true. the || part was added
+  // to avoid stopping the digest when the queue is not empty
+  } while (dirty || this.$$asyncQueue.length);
+  this.$clearPhase();
 };
 
+// $$ significa che la usa angular. $ significa che la usa l'app (è
+// una var di angular, ma fa parte dell'API)
 Scope.prototype.$$digestOnce = function() {
   // let's pass scope to watchFn to allow it to access scope fields
   // we exploit a closure property, to pass this to a callback
@@ -91,39 +133,45 @@ Scope.prototype.$$digestOnce = function() {
     // catching exceptions when executing watch and listener, to make the
     // program more robust, avoiding program stops
     try {
-      // get newValue
-      newValue = watcher.watchFn(self);
-      // get oldValue
-      oldValue = watcher.last;
-      // if there's a change, meaning if the newValue is different from the
-      // oldValue, the watcher is dirty and we are going to call the listener
-      // from newValue !== oldValue to the condition below to account for
-      // comparison by value. hte bang in front because we are going to execute
-      // the if block code if new and old value are NOT equal
-      if (!self.$$areEqual(newValue, oldValue, watcher.valueEq)) {
-        // set the last dirty watcher
-        self.$$lastDirtyWatch = watcher;
-        // updating last
-        // if flag valueEq is true, meaning we want a by value comparison
-        // then we update last with a copy of newValue, to avoid that last
-        // and newValue point to the same address (then updating newValue would
-        // update last, so I would always compare the same thing)
-        watcher.last = (watcher.valueEq ? _.cloneDeep(newValue) : newValue);
-        // calling listener (reacting to a value change)
-        watcher.listenerFn(newValue,
-          // set oldValue to newValue the first time we digest to avoid
-          // leak initWatchVal outside of scope
-          (oldValue === initWatchVal ? newValue : oldValue), 
-          self);
-          dirty = true;
-          // if the watcher is clean, meaning the if condition above is false,
-          // and the watcher was the last dirty one
-        } else if (self.$$lastDirtyWatch === watcher) {
-          // returning false will get us out of _.forEach (see spec)
-          // meaning dirty will not be assigned false, it will be undefined
-          // which will end the enclosing loop
-          return false;
-        }
+      // let's check the watcher exists, otherwise we get an exception
+      // making test 'allows destroying several $watches during digest' fail
+      // if watcher is undefined we skip the try block, thus skipping also
+      // the exception block
+      if (watcher) {
+        // get newValue
+        newValue = watcher.watchFn(self);
+        // get oldValue
+        oldValue = watcher.last;
+        // if there's a change, meaning if the newValue is different from the
+        // oldValue, the watcher is dirty and we are going to call the listener
+        // from newValue !== oldValue to the condition below to account for
+        // comparison by value. the bang in front because we are going to execute
+        // the if block code if new and old value are NOT equal
+        if (!self.$$areEqual(newValue, oldValue, watcher.valueEq)) {
+          // set the last dirty watcher
+          self.$$lastDirtyWatch = watcher;
+          // updating last
+          // if flag valueEq is true, meaning we want a by value comparison
+          // then we update last with a copy of newValue, to avoid that last
+          // and newValue point to the same address (then updating newValue would
+          // update last, so I would always compare the same thing)
+          watcher.last = (watcher.valueEq ? _.cloneDeep(newValue) : newValue);
+          // calling listener (reacting to a value change)
+          watcher.listenerFn(newValue,
+            // set oldValue to newValue the first time we digest to avoid
+            // leak initWatchVal outside of scope
+            (oldValue === initWatchVal ? newValue : oldValue),
+            self);
+            dirty = true;
+            // if the watcher is clean, meaning the if condition above is false,
+            // and the watcher was the last dirty one
+          } else if (self.$$lastDirtyWatch === watcher) {
+            // returning false will get us out of _.forEach (see spec)
+            // meaning dirty will not be assigned false, it will be undefined
+            // which will end the enclosing loop
+            return false;
+          }
+      }
     } catch (exception) {
       console.log(exception);
     }
@@ -142,11 +190,95 @@ Scope.prototype.$$areEqual = function(newValue, oldValue, valueEq) {
     // now we use === instead of !== because I call $$areEqual with the Bang
     // in front
     return newValue === oldValue     ||
-      ( typeof newValue === 'number' && 
+      ( typeof newValue === 'number' &&
         typeof oldValue === 'number' &&
-        isNaN(newValue)              && 
+        isNaN(newValue)              &&
         isNaN(oldValue)
       );
+  }
+};
+
+Scope.prototype.$eval = function(expr, locals) {
+  // why do I pass `this` to expr ? what's confusing is a fn call into a
+  // fn definition. Let's break it down.
+  // 1. this is the function definition of $eval
+  // 2. it's a method on the scope proto, that means I usually call it as `scope.$eval`
+  // 3. `expr` is a cb, I get it from the `return` statement
+  // 4. can't say what's the value of `this` here. It's defined at call time, but since `$eval` most of the time will be called like this `instanceOfScope.$eval` then `this` most of the time will be `instanceOfScope`, aka scope 
+
+  return expr(this, locals);
+};
+
+Scope.prototype.$apply = function(expr) {
+  try {
+    // set phase
+    this.$beginPhase('$apply');
+    return this.$eval(expr);
+  // `finally` block is ALWAYS executed (compare with `catch`), but AFTER the
+  // return statement above
+  // so the `try` runs `expr`, the code I'd like to run, through `$eval`,
+  // meaning in `this` context, then `finally` guarantees updates of values
+  // by calling `$digest`
+  } finally {
+    // clear phase
+    this.$clearPhase();
+    this.$digest();
+  }
+};
+
+Scope.prototype.$evalAsync = function(expr) {
+  // to make 'schedules a digest in $evalAsync' test pass
+  var self = this;
+  // condition: phase null and no queue
+  if (!self.$$phase && !self.$$asyncQueue.length) {
+    setTimeout(function() {
+      if (self.$$asyncQueue.length) {
+        self.$digest();
+      }
+    });
+  }
+  // this is the first implementation, just an obj push to the queue
+  this.$$asyncQueue.push({
+    // storing scope on the queue obj is due to scope inheritance
+    // I'll see it in Ch 3
+    // basically I am pushing the code to defer into the queue
+    // wrapped up into an obj
+    scope: this,
+    expression: expr
+  });
+};
+
+Scope.prototype.$beginPhase = function(phase) {
+  if (this.$$phase) {
+    throw this.$$phase + ' already in progress.';
+  }
+  this.$$phase = phase;
+};
+
+Scope.prototype.$clearPhase = function() {
+  this.$$phase = null;
+};
+
+Scope.prototype.$applyAsync = function(expr) {
+  var self = this;
+  // push the evaluated cb `$eval(expr)` to the queue, evaluated in the context of the scope `self.`
+  self.$$applyAsyncQueue.push(function() {
+    self.$eval(expr);
+  });
+  if (self.$$applyAsyncId === null) {
+    // using browser API setTimeout implies losing control of the time of execution
+    self.$$applyAsyncId = setTimeout(function() {
+      // calling `$apply` just once outside the `while` loop implies 1 digest
+      self.$apply(function() {
+        // will go on until the length is 0, implies the loop will stop only
+        // when the queue is empty
+        while (self.$$applyAsyncQueue.length) {
+          // see the ()()? implies that the fn returned by `self.$$applyAsyncQueue.shift()` will be called
+          self.$$applyAsyncQueue.shift()();
+        }
+        self.$$applyAsyncId = null;
+      });
+    }, 0);
   }
 };
 

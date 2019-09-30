@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+  </head>
+  <body></body>
+  <script>
+
+// dichiaro `scope` obj
+var scope = {}
+
+function initWatchVal() {}
+
+// per aggiungere un watcher
+scope.$watch = function(watchFn, listenerFn) {
+  var watcher = {
+    watchFn: watchFn,
+    listenerFn: listenerFn,
+    last: initWatchVal
+  }
+  this.$$watchers.push(watcher)
+}
+
+// dove metto il watcher 
+scope.$$watchers = []
+
+// per fare il dirty checking
+scope.$digest = function() {
+  var newValue, oldValue;
+  this.$$watchers.forEach(function(watcher) {
+    newValue = watcher.watchFn();
+    oldValue = watcher.last;
+    if (newValue != oldValue) {
+      watcher.last = newValue;
+      watcher.listenerFn(newValue, oldValue, this)
+    }
+  })
+}
+</script>
+</html>

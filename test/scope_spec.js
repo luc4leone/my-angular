@@ -1,18 +1,19 @@
 'use strict';
 
 var _ = require('lodash');
-var Scope = require('../src/scope.js'); // vedi module.exports statement in scope.js
+// vedi module.exports statement in scope.js
+var Scope = require('../src/scope.js');
 
-// I put 's' instead of 'S' because of it fn: "can be contructed..." 
+// I put 's' instead of 'S' because of it fn: "can be contructed..."
 // it's the obj, not the contructor
-describe('scope', function() { 
+describe('scope', function() {
   it('can be constructed and used as an object', function() {
     // create the scope
     var scope = new Scope();
     // add a property to the scope and initialize it to 1
     scope.aProperty = 1;
 
-    // actual shoiuld be expected 1
+    // actual should be expected 1
     expect(scope.aProperty).toBe(1);
   });
 
@@ -22,7 +23,8 @@ describe('scope', function() {
 
     // Jasmine method that takes an optional cb "that contains the code to setup your specs"
     // Initializing the scope, so we don't have to do it for each test
-    beforeEach(function initScope() { // added name for the debugger
+    // added name to fn passed in for debugging
+    beforeEach(function initScope() {
       scope = new Scope();
     });
 
@@ -156,8 +158,8 @@ describe('scope', function() {
         }
       );
 
-      // the first time I run digest I am expecting the name watcher to run 
-      // the listener that would create nameUpper and initialize it to 
+      // the first time I run digest I am expecting the name watcher to run
+      // the listener that would create nameUpper and initialize it to
       // 'JANE'. here we are at the end of the first round through the watchers.
       // if we expect initial to be 'J.' then there should be a second round
       scope.$digest();
@@ -177,7 +179,7 @@ describe('scope', function() {
         function(scope) { return scope.counterA; },
         function(newValue, oldValue, scope) { return scope.counterB++; }
         );
-    
+
       scope.$watch( // that checks for B but acts on A
         function(scope) { return scope.counterB; },
         function(newValue, oldValue, scope) { return scope.counterA++; }
@@ -212,7 +214,7 @@ describe('scope', function() {
       scope.$digest();
       // the first is dirty, from initWatchVal to 0 >>> watchExecution = 1
       // the second is dirty, from initWatchVal to 1 >>> watchExecution = 2
-      // ... and so on until the 100th from initWatchVal to 99 
+      // ... and so on until the 100th from initWatchVal to 99
         // >>> watchExecution = 100
       // the first is clean, from 0 to 0 >>> watchExecution = 101
       // the second is clean, from 1 to 1 >>> watchExecution = 102
@@ -224,7 +226,7 @@ describe('scope', function() {
       // the 100th is clean, from 99 to 99 >>> watchExecution = 300
       // the 101st is clean, from 420 to 420 >>> watchExecution = 301
         // here I'd like the digest to stop because 100 watchers were digested
-        // without finding anyone dirty 
+        // without finding anyone dirty
       scope.$digest();
       expect(watchExecutions).toBe(301);
     });
@@ -351,7 +353,7 @@ describe('scope', function() {
       scope.aValue = 'abc';
       scope.counter = 0;
 
-      // scope.$watch() will setup a watcher as usual, but we save its 
+      // scope.$watch() will setup a watcher as usual, but we save its
       // returned value into the variable destroyWatch
       var destroyWatch = scope.$watch(
         function(scope) { return scope.aValue; },
@@ -409,20 +411,21 @@ describe('scope', function() {
       scope.$digest();
       expect(watchCalls).toEqual(['first', 'second', 'third', 'first', 'third']);
 
-      // a test in the console to understand why this test doen not pass
-      // var a = [1,2,3];
-      // var arr = [];
-      // _.forEach(a, function(n, i) {
-      //   arr.push(n);
-      //   if (i == 1) a.splice(i,1);
-      // });
-      // a
-      // [1, 3]
-      // arr
-      // [1, 2, undefined]
-
       /**
-        With push I get:
+        An experiment in the console to understand why this test does not pass:
+        var a = [1,2,3];
+        var arr = [];
+        _.forEach(a, function(n, i) {
+          arr.push(n);
+          if (i == 1) a.splice(i,1);
+        });
+        a
+        [1, 3]
+        arr
+        [1, 2, undefined]
+
+
+        If I use push in $watch to add watcher to watchers, I get:
           watchers = [1,2,3]
 
         watchCalls = []
@@ -431,11 +434,11 @@ describe('scope', function() {
         | 0     | [1,2,3]         | [1]             | [1,2,3]        |
         | 1     | [1,2,3]         | [1,2]           | [1,3]          |
         | 2     | [1,3]           | [1,2,undefined] | [1,3]          |
-        
+
         I can test this table:
-        
-         function forEach(array, callback) {
-           var length = array.length;
+
+          function forEach(array, callback) {
+            var length = array.length;
             for (var i = 0; i < length; i++) {
               callback(array[i], i, array);
             }
@@ -452,8 +455,8 @@ describe('scope', function() {
           (2) [1, 3]
           arr
           (3) [1, 2, undefined]
-          
-        When I use unshift instead of push I get:
+
+        If I use unshift instead of push I get:
           watchers = [3,2,1]
         Then I use forEachRight:
 
@@ -462,7 +465,7 @@ describe('scope', function() {
         | 1     | [3,2,1]         | [1,2]      | [3,1]          |
         | 0     | [3,1]           | [1,2,3]    | [3,1]          |
 
-        I can test this table:
+        I can test this table with:
 
           function forEachRight(array, callback) {
             var length = array.length;
@@ -482,11 +485,448 @@ describe('scope', function() {
           (2) [1, 3]
           arr
           (3) [1, 2, 3]
-
        */
+    });
 
+    it('allows a $watch to destroy another during digest', function() {
+      scope.aValue = 'abc';
+      scope.counter = 0;
+
+      // first watch calls destroyWatch in it's listener
+      scope.$watch(
+        function(scope) {
+          return scope.aValue;
+        },
+        function(newValue, oldValue, scope) {
+          destroyWatch();
+        }
+      );
+
+      // second watch
+      // we store the fn returned by $watch() in destroyWatch var
+      var destroyWatch = scope.$watch(
+        function(scope) { },
+        function(newValue, oldValue, scope) { }
+      );
+
+      // third watch
+      scope.$watch(
+        function(scope) { return scope.aValue; },
+        function(newValue, oldValue, scope) {
+          scope.counter++;
+        }
+      );
+
+      // 1. The first watch is executed. It is dirty, so it is stored in $$lastDirtyWatch
+         // and its listener is executed. The listener destroys the second watch.
+      // 2. The first watch is executed again, because it has moved one position down in
+         // the watcher array. This time it is clean, and since it is also in
+         // $$lastDirtyWatch, the digest ends. We never get to the third watch.
+      scope.$digest();
+      // instead I get 0
+      expect(scope.counter).toBe(1);
     });
 
 
-  });
-});
+    it('allows destroying several $watches during digest', function() {
+      scope.aValue = 'abc';
+      scope.counter = 0;
+
+      // the watch of the first watcher destroys watcher 1 and 2
+      var destroyWatch1 = scope.$watch(
+        function(scope) {
+          destroyWatch1();
+          destroyWatch2();
+        }
+      );
+
+      // save returned fn when creating second watch to destroy it later
+      var destroyWatch2 = scope.$watch(
+        function(scope) { return scope.aValue; },
+        function(newValue, oldValue, scope) {
+          scope.counter++;
+        }
+      );
+
+      scope.$digest();
+      expect(scope.counter).toBe(0);
+    });
+
+    // what's a digest phase?
+    it('has a $$phase field whose value is the current digest phase', function() {
+      // value to watch
+      scope.aValue = [1, 2, 3];
+      // maybe these are the phases...
+      scope.phaseInWatchFunction = undefined;
+      scope.phaseInListenerFunction = undefined;
+      scope.phaseInApplyFunction = undefined;
+
+      scope.$watch(
+        function(scope) {
+          scope.phaseInWatchFunction = scope.$$phase;
+          return scope.aValue;
+        },
+        function(newValue, oldValue, scope) {
+          scope.phaseInListenerFunction = scope.$$phase;
+        }
+      );
+
+      scope.$apply(function(scope) {
+        scope.phaseInApplyFunction = scope.$$phase;
+      });
+
+      expect(scope.phaseInWatchFunction).toBe('$digest');
+      expect(scope.phaseInListenerFunction).toBe('$digest');
+      expect(scope.phaseInApplyFunction).toBe('$apply');
+    });
+
+
+  }); // end of describe digest
+
+  // executing code in the context of a scope: $eval
+  describe('$eval', function() {
+    var scope;
+
+    beforeEach(function() {
+      scope = new Scope();
+    });
+
+    it('executes $evaled function and returns result', function() {
+      scope.aValue = 42;
+
+      // $eval takes a cb as an argument, and immediately execute that cb,
+      // passing it the scope obj as an argument.
+      // $eval returns whatever the cb returns
+      // $eval is a method defined in scope, I made the mistake of thinking it belonged to the controller
+      var result = scope.$eval(function(scope) {
+        return scope.aValue;
+      });
+
+      expect(result).toBe(42);
+    });
+
+    // $eval takes also a second argument that passes to the cb
+    it('passes the second $eval argument straight through', function() {
+      scope.aValue = 42;
+
+      var result = scope.$eval(function(scope, arg) {
+        return scope.aValue + arg;
+      }, 2);
+
+      expect(result).toBe(44);
+    });
+
+  }); // end of describe $eval
+
+  // executing code in the context of a scope: $apply
+  describe('$apply', function() {
+    var scope;
+
+    beforeEach(function() {
+      scope = new Scope();
+    });
+
+    it('executes the given function and starts the digest', function() {
+      scope.aValue = 'someValue';
+      scope.counter = 0;
+
+      scope.$watch(
+        function(scope) {
+          return scope.aValue;
+        },
+        function(newValue, oldValue, scope) {
+          scope.counter++;
+        }
+      );
+
+      scope.$digest();
+      expect(scope.counter).toBe(1);
+
+      // $apply takes a fn as an argument
+      scope.$apply(function(scope) {
+        scope.aValue = 'someOtherValue';
+      });
+      // we expect the counter to be 2, meaning calling $apply runs $digest
+      expect(scope.counter).toBe(2);
+    });
+
+  }); // end of describe &apply
+
+  describe('$evalAsync', function() {
+    var scope;
+
+    beforeEach(function() {
+      scope = new Scope();
+    });
+    // "in the same cycle" meaning within the current digest cycle,
+    // which is not the case when the deferring goal is reached through
+    // a different implementation, e.g. setTimeout or the angular $timeout
+    // service where you relinquish control to the browser
+
+    // in this test the code-to-run-later is in the listener
+    it('executes given function later in the same cycle', function() {
+      scope.aValue = [1, 2, 3];
+      // better name: asyncEvaluatedLater
+      scope.asyncEvaluated = false;
+      scope.asyncEvaluatedImmediately = false;
+
+      scope.$watch(
+        function(scope) {
+          return scope.aValue;
+        },
+        function(newValue, oldValue, scope) {
+          // run $evalAsync into the listener
+          scope.$evalAsync(function(scope) {
+            // update value
+            scope.asyncEvaluated = true;
+          });
+          // update `asyncEvaluatedImmediately`
+          scope.asyncEvaluatedImmediately = scope.asyncEvaluated;
+        }
+      );
+
+      // run digest
+      scope.$digest();
+      // this expectation implies the implementation should work like this:
+      // the update of `scope.asyncEvaluated` should run by the end of `digest`
+      expect(scope.asyncEvaluated).toBe(true);
+      // this expectation means I want $evalAsync to run after all the code
+      // in the listener has run
+      expect(scope.asyncEvaluatedImmediately).toBe(false);
+    });
+
+    // this is something I should not do, because I don't want side effects
+    // for watch functions
+    it('executes $evalAsynced functions added by watch functions', function() {
+      scope.aValue = [1, 2, 3];
+      scope.asyncEvaluated = false;
+
+      // this test makes the $evalAsync run once...
+      scope.$watch(
+        function(scope) {
+          if (!scope.asyncEvaluated) {
+            scope.$evalAsync(function(scope) {
+              scope.asyncEvaluated = true;
+            });
+          }
+          return scope.aValue;
+        },
+        function(newValue, oldValue, scope) { }
+      );
+
+      scope.$digest();
+
+      expect(scope.asyncEvaluated).toBe(true);
+    });
+
+    // while this test makes the $evalAsync run more than once
+    it('executes $evalAsynced functions even when not dirty', function() {
+      scope.aValue = [1, 2, 3];
+      scope.asyncEvaluatedTimes = 0;
+
+      scope.$watch(
+        function(scope) {
+          if (scope.asyncEvaluatedTimes < 2) {
+            scope.$evalAsync(function(scope) {
+              scope.asyncEvaluatedTimes++;
+            });
+          }
+          return scope.aValue;
+        },
+        function(newValue, oldValue, scope) { }
+      );
+
+      scope.$digest();
+
+      expect(scope.asyncEvaluatedTimes).toBe(2);
+    });
+
+    it('eventually halts $evalAsyncs added by watches', function() {
+      scope.aValue = [1, 2, 3];
+
+      scope.$watch(
+        function(scope) {
+          scope.$evalAsync(function(scope) { });
+          return scope.aValue;
+        },
+        function(newValue, oldValue, scope) { }
+      );
+
+      expect(function() { scope.$digest(); }).toThrow();
+    });
+
+    it('schedules a digest in $evalAsync', function(done) {
+      scope.aValue = 'abc';
+      scope.counter = 0;
+
+      scope.$watch(
+        function(scope) { return scope.aValue; },
+        function(newValue, oldValue, scope) {
+          scope.counter++;
+        }
+      );
+
+      scope.$evalAsync(function(scope) { });
+
+      // expecting the digest doesn't run immediately
+      expect(scope.counter).toBe(0);
+      // checking that 50 ms later the digest is run
+      setTimeout(function() {
+        expect(scope.counter).toBe(1);
+        // argument 'done' (see above) to make setTimeout work with Jasmine
+        done();
+      }, 50);
+    });
+
+    xit('catches exceptions in $evalAsync', function(done) {
+      scope.aValue = 'abc';
+      scope.counter = 0;
+
+      scope.$watch(
+        function(scope) { return scope.aValue; },
+        function(newValue, oldValue, scope) {
+          scope.counter++;
+        }
+      );
+
+      scope.$evalAsync(function(scope) {
+        throw 'Error';
+      });
+
+      setTimeout(function() {
+        expect(scope.counter).toBe(1);
+        done();
+      }, 50);
+    });
+  }); // end of describe $evalAsync
+
+  describe('$applyAsync', function() {
+    var scope;
+
+    beforeEach(function() {
+      scope = new Scope();
+    });
+
+    it('allows async $apply with $applyAsync', function(done) {
+      scope.counter = 0;
+
+      scope.$watch(
+        function(scope) { return scope.aValue; },
+        function(newValue, oldValue, scope) {
+          scope.counter++;
+        }
+      );
+
+      scope.$digest();
+      expect(scope.counter).toBe(1);
+
+      scope.$applyAsync(function(scope) {
+        scope.aValue = 'abc';
+      });
+      // expectation implies $applyAsync will NOT run the update immediately
+      expect(scope.counter).toBe(1);
+
+
+      setTimeout(function() {
+        // implies the update is delayed 50 ms
+        expect(scope.counter).toBe(2);
+        done();
+      }, 50);
+    });
+
+    it('never executes $applyAsynced function in the same cycle', function(done) {
+      scope.aValue = [1, 2, 3];
+      scope.asyncApplied = false;
+      scope.asyncAppliedImmediately = false;
+
+      scope.$watch(
+        function(scope) { return scope.aValue; },
+        function(newValue, oldValue, scope) {
+          scope.$applyAsync(function(scope) {
+            scope.asyncApplied = true;
+          });
+        }
+      );
+
+      scope.$digest();
+      expect(scope.asyncApplied).toBe(false);
+      setTimeout(function() {
+        expect(scope.asyncApplied).toBe(true);
+        done();
+      }, 50);
+    });
+
+    it('coalesces many calls to $applyAsync', function(done) {
+      scope.counter = 0;
+
+      scope.$watch(
+        function(scope) {
+          scope.counter++;
+          return scope.aValue;
+        },
+        function(newValue, oldValue, scope) { }
+      );
+
+      scope.$applyAsync(function(scope) {
+        scope.aValue = 'abc';
+      });
+      scope.$applyAsync(function(scope) {
+        scope.aValue = 'def';
+      });
+
+      setTimeout(function() {
+        // the first digest will run twice. it's triggered by the first 
+        // $applyAsync call. That means the second call to $applyAsync should
+        // 
+        expect(scope.counter).toBe(2);
+        done();
+      }, 50);
+    });
+
+    xit('cancels $applyAsync if digested first', function(done) {
+      scope.counter = 0;
+
+      scope.$watch(
+        function(scope) {
+          scope.counter++;
+          return scope.aValue;
+        },
+        function(newValue, oldValue, scope) { }
+      );
+
+      scope.$applyAsync(function(scope) {
+        scope.aValue = 'abc';
+      });
+      scope.$applyAsync(function(scope) {
+        scope.aValue = 'def';
+      });
+
+      scope.$digest();
+      expect(scope.counter).toBe(2);
+      expect(scope.aValue).toEqual('def');
+
+      setTimeout(function() {
+        expect(scope.counter).toBe(2);
+        done();
+      }, 50);
+    });
+
+    xit('catches exceptions in $applyAsync', function(done) {
+      scope.$applyAsync(function(scope) {
+        throw 'Error';
+      });
+      scope.$applyAsync(function(scope) {
+        throw 'Error';
+      });
+      scope.$applyAsync(function(scope) {
+        scope.applied = true;
+      });
+
+      setTimeout(function() {
+        expect(scope.applied).toBe(true);
+        done();
+      }, 50);
+    });
+
+  }); // end of describe $applyAsync
+}); // end of describe scope
