@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+  </head>
+  <body></body>
+  <script src="lodash.js"></script>
+  <script>
+
+'use strict';
+
+function forEach(array, callback) {
+  for (var i = 0; i < array.length; i++) {
+    callback(array[i], i, array);
+  }
+}
+// to make first value of scope.last unique, hence always detect a change
+function initWatchVal() {}
+
+function Scope() {
+	this.$$watchers = []; 
+}
+
+// to add a watcher
+Scope.prototype.$watch = function(watchFn, listenerFn) {
+  var watcher = {
+    watchFn: watchFn,
+    listenerFn: listenerFn || function() {},
+    last: initWatchVal
+  }
+  this.$$watchers.push(watcher);
+};
+
+// dirty checking
+Scope.prototype.$digest = function() {
+  var self = this;
+  var newValue, oldValue;
+  for(var i = 0; i < this.$$watchers.length; i++) {
+    var watcher = this.$$watchers[i];
+    newValue = watcher.watchFn(self);
+    oldValue = watcher.last;
+    if (newValue !== oldValue) {
+      watcher.last = newValue;
+      watcher.listenerFn(newValue, oldValue, self);
+    }
+  };
+};
+
+/* PLAY IN THE CONSOLE
+
+  scope.one = 1;
+
+  scope.$watch(
+    function(){return scope.one}, 
+    function(){console.log(scope.one)});
+
+  scope.$digest();
+
+  scope.one = 2;
+
+  scope.$digest();
+
+*/
+</script>
+</html>

@@ -1,9 +1,8 @@
-//
+// 2019-09-26
 
 CH. 1 SCOPE OBJECTS
 
 * function Scope() { }
-
 
 
 //
@@ -85,6 +84,8 @@ $watch = function(watchFn, listenerFn) {
   $$watchers.push(watcher)
 }
 
+// potrei scriverlo così
+fn = (watchFn, listenerFn) $watch ($$watchers)
 
 
 // 
@@ -243,7 +244,11 @@ $watch = function(watchFn, listenerFn, valueEq) {
 
 // edge cases handled with unshift() and forEachRight()
 
+//
 
+SPEC
+
+- $watch 
 
 //
 
@@ -482,7 +487,7 @@ $digest = function() {
 
 //
 
-RUNNING CODE AFTER A DIGEST - $$postDiget
+RUNNING CODE AFTER A DIGEST - $$postDigest
 
 function Scope() 
   $$watchers = []
@@ -544,13 +549,13 @@ $apply = function(cb)
 *    $watch(watchFn, listenerFn)
 
 $watchGroup = function(watchFns, listenerFn)
- newValues, oldValues
- loop watchFns
-   $watch(watchFn, function(newValue, oldValue) {
-     
-   })
-
-
+  newValues, oldValues
+  loop watchFns
+    $watch(watchFn, function(newValue, oldValue) {
+      newValues[i] = newValue
+      oldValues[i] = oldValue
+      listenerFn(newValues, oldValues, self)
+    })
 
 
 
