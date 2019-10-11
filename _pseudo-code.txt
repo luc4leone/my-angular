@@ -558,6 +558,125 @@ $watchGroup = function(watchFns, listenerFn)
     })
 
 
+//
+
+OAKLEY budget
+
+* Time & inspection ground license         | 12950
+* 1 User licence                           | 750
+* 1 Partner licence                        | 750
+
+* DB unlimited users                       | 8200
+
+* Standard import / export service         | 5980
+    SAP integration
+
+Service - Organisation per day Morgan Technicians | 900
+  12 days
+
+  30 days interface dev
+
+  30 days training
+
+* mobile final inspection including 1 device
+* mamobile final inspection additional device
+ (20 inspectors means * 20)
+
+Service - Annual fee calculated on software ground licenses plus additional licenses plus user licenses
+  0.2                  
+
+//
+32 inspectors in supplier plant
+10 / 15 warehouse inspection
+=> 40 / 45 tablets
+
+
+//
+
+SCOPE INHERITANCE
+
+/*
+
+proto schema
+
+angelo_leone
+  luigi_leone
+  nella_leone
+    luca_leone
+
+*/
+
+$ function Member() {};
+$ var angelo_leone = new Member();
+$ Member.family = 'leone'
+
+$ var luigi_leone = angelo_leone.$new()
+$ luigi_leone.family // 'leone'
+
+$ angelo.leone.prototype.generation = 'under angelo';
+
+$ var nella_leone = angelo_leone.$new()
+
+
+parent.num = 2
+
+parent.num
+2
+
+
+child.num
+2
+
+grandparent.num
+1 // var was shadowed
+
+
+// 
+
+$new
+
+Scope.prototype.$new = function() {
+  var ChildScope = function() { };
+  ChildScope.prototype = this;
+  var child = new ChildScope();
+  return child;
+};
+
+// tests in the console to understand `ChildScope.prototype = this`
+
+$ var Constr = function() { }
+$ var obj = {name: 'myProto'}
+$ constr.prototype = obj
+$ var child = new Constr()
+$ child.age = 2
+$ Constr.prototype.fn = function() {console.log(this)}
+$ child.fn()
+Constr {age: 22}
+$ var secondChild = new Constr()
+$ secondChild.age = 23
+$ secondChild.fn()
+Constr {age: 23}
+
+
+
+
+
+
+var aj = 1;
+1
+(function aj() {})()
+undefined
+aj
+1
+// unexpected
+undefined
+
+
+
+
+
+
+
 
 
 

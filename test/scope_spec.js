@@ -1121,4 +1121,6 @@ describe('scope', function() {
     });
 
   });
+
+  
 }); // end of describe scope

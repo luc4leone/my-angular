@@ -1,0 +1,30 @@
+// MAKING A CHILD SCOPE
+
+var angelo = new Scope()
+ undefined
+angelo
+ Scope {$$watchers: Array(0), $$lastDirtyWatch: null, $$asyncQueue: Array(0), $$applyAsyncQueue: Array(0), $$applyAsyncId: null, …}
+var luigi = angelo.$new() // create a child scope of angelo
+ undefined
+luigi
+ ChildScope {$$watchers: Array(0), $$children: Array(0), $parent: Scope}
+luigi.$parent
+ Scope {$$watchers: Array(0), $$lastDirtyWatch: null, $$asyncQueue: Array(0), $$applyAsyncQueue: Array(0), $$applyAsyncId: null, …}
+angelo.age = 90
+ 90
+luigi.age
+ 90 // luigi shares the properties of his parent scope angelo
+luigi.name = 'luis'
+ "luis"
+angelo.name
+ undefined // but angelo doesn't share his child properties
+
+var nella = angelo.$new()
+ undefined
+nella
+ ChildScope {$$watchers: Array(0), $$children: Array(0), $parent: Scope}
+angelo.family = 'leone'
+"leone"
+nella.family
+"leone" // WHEN the properties are defined is irrelevant
+
