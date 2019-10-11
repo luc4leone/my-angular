@@ -1,4 +1,4 @@
-# My approach to "read" the book
+# My approach to reading the book
 
 At first I've approached the book, implementing the code, section by section, following the author TDD style. Didn't work too well for me: without an idea, a proto of each functionality, TDD single building steps often made no sense to me. So I changed my approach.
 
