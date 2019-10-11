@@ -67,4 +67,4 @@ Now that I understand the functionality, before reading the test-driven implemen
 
 If I wrote by myself the implementation code, that compare & contrast with the book implementation.
 
-Otherwise write the code following the book instructions, 1 test at a time, TDD style. (This is the right time for stepping through the code in the debugger.
+Otherwise write the code following the book instructions, 1 test at a time, TDD style. (This is the right time for stepping through the code in the debugger).
