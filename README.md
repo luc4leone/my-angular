@@ -70,6 +70,5 @@ For instance, if the method I would want to implement is `copyWithin`, I'd like 
 
 ## Step 5: Build the method with TTD following the book steps
 
-If I was able to write by myself the implementation code, than compare & contrast with the book implementation.
-
-If I was **not** able to write by myself I'll copy the code following the book, 1 test at a time, TDD style (this is the right time for stepping through the code in the debugger).
+- If I was able to write by myself the implementation code, than compare & contrast with the book implementation.
+- If I was **not** able to write by myself I'll copy the code following the book, 1 test at a time, TDD style (this is the right time for stepping through the code in the debugger).
