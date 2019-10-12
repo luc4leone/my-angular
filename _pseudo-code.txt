@@ -673,31 +673,33 @@ undefined
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+child {}
+  <prototype>: parent {}
+    "$$applyAsyncId": null
+    "$$applyAsyncQueue": Array []
+    "$$asyncQueue": Array []
+    "$$children": Array []
+    "$$lastDirtyWatch": null
+    "$$phase": null
+    "$$postDigestQueue": Array []
+    "$$watchers": Array []
+      <prototype>: Scope.prototype {}
+        "$$areEqual": function $$areEqual()​​​
+        "$$digestOnce": function $$digestOnce()​​​
+        "$$flushApplyAsync": function $$flushApplyAsync()​​​
+        "$$postDigest": function $$postDigest()​​​
+        "$apply": function $apply()​​​
+        "$applyAsync": function $applyAsync()​​​
+        "$beginPhase": function $beginPhase()​​​
+        "$clearPhase": function $clearPhase()​​​
+        "$digest": function $digest()​​​
+        "$eval": function $eval()​​​
+        "$evalAsync": function $evalAsync()​​​
+        "$new": function $new()​​​
+        "$watch": function $watch()​​​
+        "$watchGroup": function $watchGroup()​​​
+        constructor: function Scope()​​​
+          <prototype>: Object {}
 
 
 

@@ -13,43 +13,45 @@ At first I've approached the book, implementing the code, section by section, fo
 
 For instance, if the method I would want to implement is `copyWithin`, I'd like to come up with something similar to:
 
->### Array.prototype.copyWithin
->
->#### GENERIC DESCRIPTION
->
->- `copyWithin()` copies part of an array to another location in the same array and returns it, without modifying its size.
->
->#### ARGUMENTS
->
->- signature
->    - `arr.copyWithin(target[, start[, end]])`
->
->- target
->    - Zero based index at which to copy the sequence to.
->    - If negative, target will be counted from the end.
->    - If target is at or greater than arr.length, nothing will be copied.
->    - If target is positioned after start, the copied sequence will be trimmed to fit `arr.length`.
->
->- start (Optional)
->    - Zero based index at which to start copying elements from.
->    - If negative, start will be counted from the end.
->    - If start is omitted, `copyWithin()` will copy from the start (defaults to 0).
->
->- end (Optional)
->    - Zero based index at which to end copying elements from. `copyWithin` copies up to but not including end.
->    - If negative, end will be counted from the end.
->    - If end is omitted, `copyWithin()` will copy until the end (default to `arr.length`).
->
->#### RETURN VALUE
->
->- The modified array.
->
->#### REQUIREMENTS
->
->- The sequence is copied and pasted as one operation.
->- pasted sequence will have the copied values even when the copy and paste region overlap.
->- The `copyWithin` function is intentionally generic, it does not require that its this value be an Array object.
->- The copyWithin method is a mutable method. It does not alter the length of this, but will change its content and create new properties if necessary.
+```js
+Array.prototype.copyWithin
+
+GENERIC DESCRIPTION
+
+`copyWithin()` copies part of an array to another location in the same array and returns it, without modifying its size.
+
+ARGUMENTS
+
+- signature
+  - `arr.copyWithin(target[, start[, end]])`
+
+- target
+  - Zero based index at which to copy the sequence to.
+  - If negative, target will be counted from the end.
+  - If target is at or greater than arr.length, nothing will be copied.
+  - If target is positioned after start, the copied sequence will be trimmed to fit `arr.length`.
+
+- start (Optional)
+  - Zero based index at which to start copying elements from.
+  - If negative, start will be counted from the end.
+  - If start is omitted, `copyWithin()` will copy from the start (defaults to 0).
+
+- end (Optional)
+  - Zero based index at which to end copying elements from. `copyWithin` copies up to but not including end.
+  - If negative, end will be counted from the end.
+  - If end is omitted, `copyWithin()` will copy until the end (default to `arr.length`).
+
+RETURN VALUE
+
+- The modified array.
+
+REQUIREMENTS
+
+- The sequence is copied and pasted as one operation.
+- pasted sequence will have the copied values even when the copy and paste region overlap.
+- The `copyWithin` function is intentionally generic, it does not require that its this value be an Array object.
+- The copyWithin method is a mutable method. It does not alter the length of this, but will change its content and create new properties if necessary.
+```
 
 ## Step 2: Copy & paste the end-of-the-chapter code
 
