@@ -356,4 +356,15 @@ Scope.prototype.$$postDigest = function(fn) {
   this.$$postDigestQueue.push(fn);
 };
 
+Scope.prototype.$new = function() {
+  var MakeChild = function() {};
+  MakeChild.prototype = this;
+  var child = new MakeChild();
+  return child;
+}
+
+
+
 module.exports = Scope;
+
+
