@@ -119,6 +119,11 @@ Scope.prototype.$digest = function() {
   this.$$lastDirtyWatch = null;
   // let’s set the phase as ”$digest” for the duration of the outer digest loop:
   this.$beginPhase('$digest');
+	
+  if (this.$$applyAsyncId) {
+    clearTimeout(this.$$applyAsyncId);
+    this.$$flushApplyAsync();
+  }
   // do at least one pass, then another only if dirty is true, meaning at least
   // a watch was dirty (when no watch was dirty the situation is deemed stable)
   do {
@@ -142,10 +147,14 @@ Scope.prototype.$digest = function() {
       // then we go into $$digestOnce, the watcher is clean, so we don't
       // run the listener
     while (this.$$asyncQueue.length) {
-      // first task in the queue
-      var asyncTask = this.$$asyncQueue.shift();
-      // run the deferred code
-      asyncTask.scope.$eval(asyncTask.expression);
+			try {
+				// first task in the queue
+	      var asyncTask = this.$$asyncQueue.shift();
+	      // run the deferred code
+	      asyncTask.scope.$eval(asyncTask.expression);
+		  } catch (e) {
+		  	console.log(e);
+		  }
     }
     dirty = this.$$digestOnce();
     // ttl check: throw exception for a digest that's never stable (at least one watch is dirty at each round)
@@ -321,21 +330,26 @@ Scope.prototype.$applyAsync = function(expr) {
   self.$$applyAsyncQueue.push(function() {
     self.$eval(expr);
   });
+	
   if (self.$$applyAsyncId === null) {
-    // using browser API setTimeout implies losing control of the time of execution
     self.$$applyAsyncId = setTimeout(function() {
-      // calling `$apply` just once outside the `while` loop implies 1 digest
-      self.$apply(function() {
-        // will go on until the length is 0, implies the loop will stop only
-        // when the queue is empty
-        while (self.$$applyAsyncQueue.length) {
-          // see the ()()? implies that the fn returned by `self.$$applyAsyncQueue.shift()` will be called
-          self.$$applyAsyncQueue.shift()();
-        }
-        self.$$applyAsyncId = null;
-      });
+      self.$apply(_.bind(self.$$flushApplyAsync, self));
     }, 0);
   }
+};
+
+Scope.prototype.$$flushApplyAsync = function() {
+  // will go on until the length is 0, implies the loop will stop only
+  // when the queue is empty
+  while (this.$$applyAsyncQueue.length) {
+    try {
+			// ()() means call the fn returned by `self.$$applyAsyncQueue.shift()`
+      this.$$applyAsyncQueue.shift()();
+    } catch (e) {
+      console.error(e);
+    }
+  }
+  this.$$applyAsyncId = null;
 };
 
 Scope.prototype.$$postDigest = function(fn) {
