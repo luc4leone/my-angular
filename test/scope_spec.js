@@ -1121,7 +1121,7 @@ describe('scope', function() {
 
   describe('inheritance', function() {
 		// the child shares the properties of its parent scope
-    xit('9.1. inherits the parents properties', function() {
+    it('9.1. inherits the parents properties', function() {
       var parent = new Scope();
       parent.aValue = [1, 2, 3];
 
@@ -1130,7 +1130,7 @@ describe('scope', function() {
       expect(child.aValue).toEqual([1, 2, 3]);
     });
 		// the parent doesn't share the properties of the child
-    xit('9.2. does not cause a parent to inherit its properties', function() {
+    it('9.2. does not cause a parent to inherit its properties', function() {
       var parent = new Scope();
 
       var child = parent.$new();
@@ -1139,7 +1139,7 @@ describe('scope', function() {
       expect(parent.aValue).toBeUndefined();
     });
     // When a property is defined on a parent scope, all of the scope’s existing child scopes also get the property
-    xit('9.3. inherits the parents properties whenever they are defined', function() {
+    it('9.3. inherits the parents properties whenever they are defined', function() {
       var parent = new Scope();
       var child = parent.$new();
 
@@ -1148,7 +1148,7 @@ describe('scope', function() {
       expect(child.aValue).toEqual([1, 2, 3]);
     });
 		// if it's an object, if it's a value it will shadow the parent value
-    xit('9.4. can manipulate a parent scopes property', function() {
+    it('9.4. can manipulate a parent scopes property', function() {
       var parent = new Scope();
       var child = parent.$new();
 
@@ -1159,7 +1159,7 @@ describe('scope', function() {
       expect(parent.aValue).toEqual([1, 2, 3, 4]);
     });
 
-    xit('9.5. can watch a property in the parent', function() {
+    it('9.5. can watch a property in the parent', function() {
       var parent = new Scope();
       var child = parent.$new();
 
@@ -1183,7 +1183,7 @@ describe('scope', function() {
       expect(child.counter).toBe(2);
     });
 
-    xit('9.6. can be nested at any depth', function() {
+    it('9.6. can be nested at any depth', function() {
       var a = new Scope();
       var aa = a.$new();
       var aaa = aa.$new();
