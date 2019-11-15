@@ -1228,7 +1228,7 @@ describe('scope', function() {
       expect(parent.user.name).toBe('Jill');
     });
 
-    xit('9.9. does not digest its parent(s)', function() {
+    it('9.9. does not digest its parent(s)', function() {
       var parent = new Scope();
       var child = parent.$new();
 
