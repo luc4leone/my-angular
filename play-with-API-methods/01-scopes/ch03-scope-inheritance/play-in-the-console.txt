@@ -28,3 +28,38 @@ angelo.family = 'leone'
 nella.family
 "leone" // WHEN the properties are defined is irrelevant
 
+
+
+// CODE RUN TO START UNDERSTAND $$everyScope
+debugger;
+
+var parent = new Scope();
+
+parent.x = 'abc';
+parent.y = 'edf';
+//parent.z = 'ghi';
+
+parent.$watch(
+  function(scope) { return scope.x; },
+  function(newValue, oldValue, scope) {
+    console.log(scope.x);
+  }
+);
+
+parent.$watch(
+  function(scope) { return scope.y; },
+  function(newValue, oldValue, scope) {
+    console.log(scope.y);
+  }
+);
+
+//var child = parent.$new();
+
+//child.$watch(
+  //function(scope) { return scope.z; },
+  //function(newValue, oldValue, scope) {
+    //console.log(scope.z);
+  //}
+//);
+
+parent.$digest();

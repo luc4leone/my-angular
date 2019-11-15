@@ -114,6 +114,7 @@ Scope.prototype.$digest = function() {
       throw '10 digest iterations reached';
     }
   } while (dirty || this.$$asyncQueue.length);
+	
   this.$clearPhase();
 
   while (this.$$postDigestQueue.length) {
