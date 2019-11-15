@@ -1206,7 +1206,7 @@ describe('scope', function() {
       expect(aaa.anotherValue).toBeUndefined();
     });
 
-    xit('9.7. shadows a parents property with the same name', function() {
+    it('9.7. shadows a parents property with the same name', function() {
       var parent = new Scope();
       var child = parent.$new();
 
@@ -1217,7 +1217,7 @@ describe('scope', function() {
       expect(parent.name).toBe('Joe');
     });
 
-    xit('9.8. does not shadow members of parent scopes attributes', function() {
+    it('9.8. does not shadow members of parent scopes attributes', function() {
       var parent = new Scope();
       var child = parent.$new();
 
