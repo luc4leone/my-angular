@@ -906,7 +906,7 @@ describe('Scope', function() {
 
   describe('inheritance', function() {
 		// the child shares the properties of its parent scope
-    it('1. inherits the parents properties', function() {
+    xit('1. inherits the parents properties', function() {
       var parent = new Scope();
       parent.aValue = [1, 2, 3];
 
@@ -915,7 +915,7 @@ describe('Scope', function() {
       expect(child.aValue).toEqual([1, 2, 3]);
     });
 		// the parent doesn't share the properties of the child
-    it('2. does not cause a parent to inherit its properties', function() {
+    xit('2. does not cause a parent to inherit its properties', function() {
       var parent = new Scope();
 
       var child = parent.$new();
@@ -924,7 +924,7 @@ describe('Scope', function() {
       expect(parent.aValue).toBeUndefined();
     });
     // When a property is defined on a parent scope, all of the scope’s existing child scopes also get the property
-    it('3. inherits the parents properties whenever they are defined', function() {
+    xit('3. inherits the parents properties whenever they are defined', function() {
       var parent = new Scope();
       var child = parent.$new();
 
@@ -933,7 +933,7 @@ describe('Scope', function() {
       expect(child.aValue).toEqual([1, 2, 3]);
     });
 		// if it's an object, if it's a value it will shadow the parent value
-    it('4. can manipulate a parent scopes property', function() {
+    xit('4. can manipulate a parent scopes property', function() {
       var parent = new Scope();
       var child = parent.$new();
 
@@ -944,7 +944,7 @@ describe('Scope', function() {
       expect(parent.aValue).toEqual([1, 2, 3, 4]);
     });
 
-    it('5. can watch a property in the parent', function() {
+    xit('5. can watch a property in the parent', function() {
       var parent = new Scope();
       var child = parent.$new();
 
@@ -968,7 +968,7 @@ describe('Scope', function() {
       expect(child.counter).toBe(2);
     });
 
-    it('6. can be nested at any depth', function() {
+    xit('6. can be nested at any depth', function() {
       var a = new Scope();
       var aa = a.$new();
       var aaa = aa.$new();
@@ -991,7 +991,7 @@ describe('Scope', function() {
       expect(aaa.anotherValue).toBeUndefined();
     });
 
-    it('7. shadows a parents property with the same name', function() {
+    xit('7. shadows a parents property with the same name', function() {
       var parent = new Scope();
       var child = parent.$new();
 
@@ -1002,7 +1002,7 @@ describe('Scope', function() {
       expect(parent.name).toBe('Joe');
     });
 
-    it('8. does not shadow members of parent scopes attributes', function() {
+    xit('8. does not shadow members of parent scopes attributes', function() {
       var parent = new Scope();
       var child = parent.$new();
 
@@ -1013,7 +1013,7 @@ describe('Scope', function() {
       expect(parent.user.name).toBe('Jill');
     });
 
-    it('9. does not digest its parent(s)', function() {
+    xit('9. does not digest its parent(s)', function() {
       var parent = new Scope();
       var child = parent.$new();
 
@@ -1029,7 +1029,7 @@ describe('Scope', function() {
       expect(child.aValueWas).toBeUndefined();
     });
 
-    it('10. keeps a record of its children', function() {
+    xit('10. keeps a record of its children', function() {
       var parent = new Scope();
       var child1 = parent.$new();
       var child2 = parent.$new();
@@ -1043,7 +1043,7 @@ describe('Scope', function() {
       expect(child2.$$children[0]).toBe(child2_1);
     });
 
-    it('11. digests its children', function() {
+    xit('11. digests its children', function() {
       var parent = new Scope();
       var child = parent.$new();
 

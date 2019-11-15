@@ -20,6 +20,7 @@ function Scope() {
   // a new queue for applyAsync
   this.$$applyAsyncQueue = [];
   this.$$applyAsyncId = null;
+	this.$$postDigestQueue = [];
   this.$$phase = null;
 }
 
@@ -59,6 +60,53 @@ Scope.prototype.$watch = function(watchFn, listenerFn, valueEq) {
       self.$$lastDirtyWatch = null;
     }
   };
+};
+
+Scope.prototype.$watchGroup = function(watchFns, listenerFn) {
+	var self = this;
+	var oldValues = new Array(watchFns.length);
+	var newValues = new Array(watchFns.length);
+	var changeReactionScheduled = false;
+	var firstRun = true;
+
+	if (watchFns.length === 0) {
+		var shouldCall = true;
+		self.$evalAsync(function() {
+			if (shouldCall) {
+				listenerFn(newValues, newValues, self);
+			}
+		});
+		return function() {
+			shouldCall = false;
+		};
+	}
+
+	function watchGroupListener() {
+		if (firstRun) {
+			firstRun = false;
+			listenerFn(newValues, newValues, self);
+		} else {
+			listenerFn(newValues, oldValues, self);
+		}
+		changeReactionScheduled = false;
+	}
+
+	var destroyFunctions = _.map(watchFns, function(watchFn, i) {
+		return self.$watch(watchFn, function(newValue, oldValue) {
+			newValues[i] = newValue;
+			oldValues[i] = oldValue;
+			if (!changeReactionScheduled) {
+				changeReactionScheduled = true;
+				self.$evalAsync(watchGroupListener);
+			}
+		});
+	});
+
+	return function() {
+		_.forEach(destroyFunctions, function(destroyFunction) {
+			destroyFunction();
+		});
+	};
 };
 
 Scope.prototype.$digest = function() {
@@ -111,6 +159,14 @@ Scope.prototype.$digest = function() {
   // to avoid stopping the digest when the queue is not empty
   } while (dirty || this.$$asyncQueue.length);
   this.$clearPhase();
+	
+  while (this.$$postDigestQueue.length) {
+    try {
+      this.$$postDigestQueue.shift()();
+    } catch (e) {
+      console.error(e);
+    }
+  }
 };
 
 // $$ significa che la usa angular. $ significa che la usa l'app (è
@@ -280,6 +336,10 @@ Scope.prototype.$applyAsync = function(expr) {
       });
     }, 0);
   }
+};
+
+Scope.prototype.$$postDigest = function(fn) {
+  this.$$postDigestQueue.push(fn);
 };
 
 module.exports = Scope;
