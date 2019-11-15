@@ -360,6 +360,7 @@ Scope.prototype.$new = function() {
   var MakeChild = function() {};
   MakeChild.prototype = this;
   var child = new MakeChild();
+	child.$$watchers = [];
   return child;
 }
 
