@@ -1244,7 +1244,7 @@ describe('scope', function() {
       expect(child.aValueWas).toBeUndefined();
     });
 
-    xit('9.10. keeps a record of its children', function() {
+    it('9.10. keeps a record of its children', function() {
       var parent = new Scope();
       var child1 = parent.$new();
       var child2 = parent.$new();
