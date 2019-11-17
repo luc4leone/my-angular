@@ -1258,7 +1258,7 @@ describe('scope', function() {
       expect(child2.$$children[0]).toBe(child2_1);
     });
 
-    xit('9.11. digests its children', function() {
+    it('9.11. digests its children', function() {
       var parent = new Scope();
       var child = parent.$new();
 
