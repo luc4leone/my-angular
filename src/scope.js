@@ -20,7 +20,8 @@ function Scope() {
   // a new queue for applyAsync
   this.$$applyAsyncQueue = [];
   this.$$applyAsyncId = null;
-	this.$$postDigestQueue = [];
+  this.$$postDigestQueue = [];
+  this.$$children = [];
   this.$$phase = null;
 }
 
@@ -357,10 +358,14 @@ Scope.prototype.$$postDigest = function(fn) {
 };
 
 Scope.prototype.$new = function() {
-  var MakeChild = function() {};
-  MakeChild.prototype = this;
-  var child = new MakeChild();
-	child.$$watchers = [];
+  var ChildScope = function() {};
+  ChildScope.prototype = this;
+  var child = new ChildScope();
+  this.$$children.push(child);
+  child.$$watchers = [];
+  // to shadow `this` (this is parent)
+  // think of $new as Scope: put here the instance properties; you added $$children in Scope, do the same here
+  child.$$children = [];
   return child;
 }
 
