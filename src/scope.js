@@ -21,6 +21,7 @@ function Scope() {
   this.$$applyAsyncQueue = [];
   this.$$applyAsyncId = null;
   this.$$postDigestQueue = [];
+  this.$root = this;
   this.$$children = [];
   this.$$phase = null;
 }
@@ -329,7 +330,7 @@ Scope.prototype.$apply = function(expr) {
   } finally {
     // clear phase
     this.$clearPhase();
-    this.$digest();
+    this.$root.$digest();
   }
 };
 

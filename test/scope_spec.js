@@ -1294,7 +1294,7 @@ describe('scope', function() {
       expect(parent.counter).toBe(1);
     });
 
-    xit('9.13. schedules a digest from root on $evalAsync', function(done) {
+    it('9.13. schedules a digest from root on $evalAsync', function(done) {
       var parent = new Scope();
       var child = parent.$new();
       var child2 = child.$new();
