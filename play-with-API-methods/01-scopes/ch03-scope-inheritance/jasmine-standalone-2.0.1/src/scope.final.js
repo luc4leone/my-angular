@@ -152,7 +152,7 @@ Scope.prototype.$digest = function() {
 
 Scope.prototype.$$digestOnce = function() {
   var dirty;
-	var continueLoop = true;
+  var continueLoop = true;
   this.$$everyScope(function(scope) {
     var newValue, oldValue;
     _.forEachRight(scope.$$watchers, function(watcher) {

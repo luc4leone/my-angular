@@ -1120,7 +1120,7 @@ describe('scope', function() {
   });
 
   describe('inheritance', function() {
-		// the child shares the properties of its parent scope
+    // the child shares the properties of its parent scope
     it('9.1. inherits the parents properties', function() {
       var parent = new Scope();
       parent.aValue = [1, 2, 3];
@@ -1129,7 +1129,7 @@ describe('scope', function() {
 
       expect(child.aValue).toEqual([1, 2, 3]);
     });
-		// the parent doesn't share the properties of the child
+    // the parent doesn't share the properties of the child
     it('9.2. does not cause a parent to inherit its properties', function() {
       var parent = new Scope();
 
@@ -1147,7 +1147,7 @@ describe('scope', function() {
 
       expect(child.aValue).toEqual([1, 2, 3]);
     });
-		// if it's an object, if it's a value it will shadow the parent value
+    // if it's an object, if it's a value it will shadow the parent value
     it('9.4. can manipulate a parent scopes property', function() {
       var parent = new Scope();
       var child = parent.$new();
@@ -1275,7 +1275,7 @@ describe('scope', function() {
       expect(child.aValueWas).toBe('abc');
     });
 
-    xit('9.12. digests from root on $apply', function() {
+    it('9.12. digests from root on $apply', function() {
       var parent = new Scope();
       var child = parent.$new();
       var child2 = child.$new();

@@ -174,75 +174,116 @@ Scope.prototype.$digest = function() {
     try {
       this.$$postDigestQueue.shift()();
     } catch (e) {
-      console.error(e);
+      console.log(e);
     }
   }
 };
 
 // $$ significa che la usa angular. $ significa che la usa l'app (è
 // una var di angular, ma fa parte dell'API)
-Scope.prototype.$$digestOnce = function() {
-  // let's pass scope to watchFn to allow it to access scope fields
-  // we exploit a closure property, to pass this to a callback
-  var self = this;
-  // needed because we want to call the listener ONLY when there's a change
-  // in some scope value
+// Scope.prototype.$$digestOnce = function() {
+//   // let's pass scope to watchFn to allow it to access scope fields
+//   // we exploit a closure property, to pass this to a callback
+//   var self = this;
+//   // needed because we want to call the listener ONLY when there's a change
+//   // in some scope value
+//
+//   // dirty is introduced with digestOnce to support multiple passes to take
+//   // care of watcher "dependencies". dirty is a boolean that will tell us
+//   // if at the end of ONE pass there were any changes or not (if true at
+//   // least one watcher was dirty)
+//   var newValue, oldValue, dirty;
+//   // for each watcher we'll check if there's a value change, if so, we call
+//   // the listener
+//   _.forEachRight(this.$$watchers, function(watcher) {
+//     // catching exceptions when executing watch and listener, to make the
+//     // program more robust, avoiding program stops
+//     try {
+//       // let's check the watcher exists, otherwise we get an exception
+//       // making test 'allows destroying several $watches during digest' fail
+//       // if watcher is undefined we skip the try block, thus skipping also
+//       // the exception block
+//       if (watcher) {
+//         // get newValue
+//         newValue = watcher.watchFn(self);
+//         // get oldValue
+//         oldValue = watcher.last;
+//         // if there's a change, meaning if the newValue is different from the
+//         // oldValue, the watcher is dirty and we are going to call the listener
+//         // from newValue !== oldValue to the condition below to account for
+//         // comparison by value. the bang in front because we are going to execute
+//         // the if block code if new and old value are NOT equal
+//         if (!self.$$areEqual(newValue, oldValue, watcher.valueEq)) {
+//           // set the last dirty watcher
+//           self.$$lastDirtyWatch = watcher;
+//           // updating last
+//           // if flag valueEq is true, meaning we want a by value comparison
+//           // then we update last with a copy of newValue, to avoid that last
+//           // and newValue point to the same address (then updating newValue would
+//           // update last, so I would always compare the same thing)
+//           watcher.last = (watcher.valueEq ? _.cloneDeep(newValue) : newValue);
+//           // calling listener (reacting to a value change)
+//           watcher.listenerFn(newValue,
+//             // set oldValue to newValue the first time we digest to avoid
+//             // leak initWatchVal outside of scope
+//             (oldValue === initWatchVal ? newValue : oldValue),
+//             self);
+//             dirty = true;
+//             // if the watcher is clean, meaning the if condition above is false,
+//             // and the watcher was the last dirty one
+//           } else if (self.$$lastDirtyWatch === watcher) {
+//             // returning false will get us out of _.forEach (see spec)
+//             // meaning dirty will not be assigned false, it will be undefined
+//             // which will end the enclosing loop
+//             return false;
+//           }
+//       }
+//     } catch (exception) {
+//       console.log(exception);
+//     }
+//   });
+//   return dirty;
+// };
 
-  // dirty is introduced with digestOnce to support multiple passes to take
-  // care of watcher "dependencies". dirty is a boolean that will tell us
-  // if at the end of ONE pass there were any changes or not (if true at
-  // least one watcher was dirty)
-  var newValue, oldValue, dirty;
-  // for each watcher we'll check if there's a value change, if so, we call
-  // the listener
-  _.forEachRight(this.$$watchers, function(watcher) {
-    // catching exceptions when executing watch and listener, to make the
-    // program more robust, avoiding program stops
-    try {
-      // let's check the watcher exists, otherwise we get an exception
-      // making test 'allows destroying several $watches during digest' fail
-      // if watcher is undefined we skip the try block, thus skipping also
-      // the exception block
-      if (watcher) {
-        // get newValue
-        newValue = watcher.watchFn(self);
-        // get oldValue
-        oldValue = watcher.last;
-        // if there's a change, meaning if the newValue is different from the
-        // oldValue, the watcher is dirty and we are going to call the listener
-        // from newValue !== oldValue to the condition below to account for
-        // comparison by value. the bang in front because we are going to execute
-        // the if block code if new and old value are NOT equal
-        if (!self.$$areEqual(newValue, oldValue, watcher.valueEq)) {
-          // set the last dirty watcher
-          self.$$lastDirtyWatch = watcher;
-          // updating last
-          // if flag valueEq is true, meaning we want a by value comparison
-          // then we update last with a copy of newValue, to avoid that last
-          // and newValue point to the same address (then updating newValue would
-          // update last, so I would always compare the same thing)
-          watcher.last = (watcher.valueEq ? _.cloneDeep(newValue) : newValue);
-          // calling listener (reacting to a value change)
-          watcher.listenerFn(newValue,
-            // set oldValue to newValue the first time we digest to avoid
-            // leak initWatchVal outside of scope
-            (oldValue === initWatchVal ? newValue : oldValue),
-            self);
+Scope.prototype.$$digestOnce = function() {
+  var dirty;
+  var continueLoop = true;
+  var self = this;
+  this.$$everyScope(function(scope) {
+    var newValue, oldValue;
+    _.forEachRight(scope.$$watchers, function(watcher) {
+      try {
+        if (watcher) {
+          newValue = watcher.watchFn(scope);
+          oldValue = watcher.last;
+          if (!scope.$$areEqual(newValue, oldValue, watcher.valueEq)) {
+            self.$$lastDirtyWatch = watcher;
+            watcher.last = (watcher.valueEq ? _.cloneDeep(newValue) : newValue);
+            watcher.listenerFn(newValue, (oldValue === initWatchVal ? newValue : oldValue), scope);
             dirty = true;
-            // if the watcher is clean, meaning the if condition above is false,
-            // and the watcher was the last dirty one
           } else if (self.$$lastDirtyWatch === watcher) {
-            // returning false will get us out of _.forEach (see spec)
-            // meaning dirty will not be assigned false, it will be undefined
-            // which will end the enclosing loop
+            continueLoop = false;
             return false;
           }
+        }
+      } catch (e) {
+        console.log(e);
       }
-    } catch (exception) {
-      console.log(exception);
-    }
+    });
+    return continueLoop;
   });
   return dirty;
+};
+// 2 $$... means helper method
+Scope.prototype.$$everyScope = function(fn) {
+  if (fn(this)) { // fn(this) will return true or false
+    // native every to $$children, significa true se cb da true su tutti i child
+      // function(child) { return child.$$everyScope(fn)};
+        // per ogni child richiamo $$everyScope
+      return this.$$children.every( function(child) { return child.$$everyScope(fn) });
+  } else {
+    return false;
+  }
 };
 
 Scope.prototype.$$areEqual = function(newValue, oldValue, valueEq) {
@@ -363,7 +404,7 @@ Scope.prototype.$new = function() {
   var child = new ChildScope();
   this.$$children.push(child);
   child.$$watchers = [];
-  // to shadow `this` (this is parent)
+  // to shadow `this` (`this` is parent)
   // think of $new as Scope: put here the instance properties; you added $$children in Scope, do the same here
   child.$$children = [];
   return child;
