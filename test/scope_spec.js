@@ -1324,7 +1324,7 @@ describe('scope', function() {
       expect(child.aValue).toBeUndefined();
     });
 
-    xit('9.15. cannot watch parent attributes when isolated', function() {
+    it('9.15. cannot watch parent attributes when isolated', function() {
       var parent = new Scope();
       var child = parent.$new(true);
 
@@ -1341,7 +1341,7 @@ describe('scope', function() {
       expect(child.aValueWas).toBeUndefined();
     });
 
-    xit('9.16. digests its isolated children', function() {
+    it('9.16. digests its isolated children', function() {
       var parent = new Scope();
       var child = parent.$new(true);
 
