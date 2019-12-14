@@ -1358,7 +1358,7 @@ describe('scope', function() {
       expect(child.aValueWas).toBe('abc');
     });
 
-    xit('9.17. digests from root on $apply when isolated', function() {
+    it('9.17. digests from root on $apply when isolated', function() {
       var parent = new Scope();
       var child = parent.$new(true);
       var child2 = child.$new();
@@ -1376,7 +1376,7 @@ describe('scope', function() {
       expect(parent.counter).toBe(1);
     });
 
-    xit('9.18. schedules a digest from root on $evalAsync when isolated', function(done) {
+    it('9.18. schedules a digest from root on $evalAsync when isolated', function(done) {
       var parent = new Scope();
       var child = parent.$new(true);
       var child2 = child.$new();
@@ -1485,3 +1485,23 @@ describe('scope', function() {
 
   });
 }); // end of describe scope
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
