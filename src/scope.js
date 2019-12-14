@@ -48,7 +48,7 @@ Scope.prototype.$watch = function(watchFn, listenerFn, valueEq) {
   // destroys itself during a digest
   this.$$watchers.unshift(watcher);
   // let's reset the last dirty watch when a watch is added
-  this.$$lastDirtyWatch = null;
+  this.$root.$$lastDirtyWatch = null;
   // destroy implementation: $watch will return a fn that the user can store
   // and call when he wants to destroy a watcher
   return function() {
@@ -59,7 +59,7 @@ Scope.prototype.$watch = function(watchFn, listenerFn, valueEq) {
       // destroy it
       self.$$watchers.splice(index, 1);
       // reset last dirty watch to null to fix test 'allows a $watch to destroy another during digest'
-      self.$$lastDirtyWatch = null;
+      self.$root.$$lastDirtyWatch = null;
     }
   };
 };
@@ -118,7 +118,7 @@ Scope.prototype.$digest = function() {
   var dirty;
   // whenever a new digest begins we reset the last dirty watch, so we make
   // sure that we don't take the last digest lastDirtyWatch
-  this.$$lastDirtyWatch = null;
+  this.$root.$$lastDirtyWatch = null;
   // let’s set the phase as ”$digest” for the duration of the outer digest loop:
   this.$beginPhase('$digest');
 	
@@ -258,11 +258,11 @@ Scope.prototype.$$digestOnce = function() {
           newValue = watcher.watchFn(scope);
           oldValue = watcher.last;
           if (!scope.$$areEqual(newValue, oldValue, watcher.valueEq)) {
-            self.$$lastDirtyWatch = watcher;
+            self.$root.$$lastDirtyWatch = watcher;
             watcher.last = (watcher.valueEq ? _.cloneDeep(newValue) : newValue);
             watcher.listenerFn(newValue, (oldValue === initWatchVal ? newValue : oldValue), scope);
             dirty = true;
-          } else if (self.$$lastDirtyWatch === watcher) {
+          } else if (self.$root.$$lastDirtyWatch === watcher) {
             continueLoop = false;
             return false;
           }
@@ -341,7 +341,7 @@ Scope.prototype.$evalAsync = function(expr) {
   if (!self.$$phase && !self.$$asyncQueue.length) {
     setTimeout(function() {
       if (self.$$asyncQueue.length) {
-        self.$digest();
+        self.$root.$digest();
       }
     });
   }
