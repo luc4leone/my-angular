@@ -1397,7 +1397,7 @@ describe('scope', function() {
       }, 50);
     });
 
-    xit('9.19. executes $evalAsync functions on isolated scopes', function(done) {
+    it('9.19. executes $evalAsync functions on isolated scopes', function(done) {
       var parent = new Scope();
       var child = parent.$new(true);
 
@@ -1424,7 +1424,7 @@ describe('scope', function() {
       expect(applied).toBe(true);
     });
 
-    xit('9.21. executes $$postDigest functions on isolated scopes', function() {
+    it('9.21. executes $$postDigest functions on isolated scopes', function() {
       var parent = new Scope();
       var child = parent.$new(true);
 
