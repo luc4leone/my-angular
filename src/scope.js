@@ -404,6 +404,9 @@ Scope.prototype.$new = function(isolated) {
   if (isolated) {
     child = new Scope();
     child.$root = this.$root;
+    child.$$asyncQueue = this.$$asyncQueue;
+    child.$$postDigestQueue = this.$$postDigestQueue;
+    child.$$applyAsyncQueue = this.$$applyAsyncQueue;
   } else {
     var ChildScope = function() {};
     ChildScope.prototype = this;

@@ -1411,7 +1411,7 @@ describe('scope', function() {
       }, 100);
     });
 
-    xit('9.20. executes $applyAsync functions on isolated scopes', function() {
+    it('9.20. executes $applyAsync functions on isolated scopes', function() {
       var parent = new Scope();
       var child = parent.$new(true);
       var applied = false;
