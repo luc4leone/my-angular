@@ -1315,6 +1315,7 @@ describe('scope', function() {
       }, 50);
     });
 
+    // section 7
     it('9.14. does not have access to parent attributes when isolated', function() {
       var parent = new Scope();
       var child = parent.$new(true);

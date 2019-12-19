@@ -122,8 +122,8 @@ Scope.prototype.$digest = function() {
   // let’s set the phase as ”$digest” for the duration of the outer digest loop:
   this.$beginPhase('$digest');
 	
-  if (this.$$applyAsyncId) {
-    clearTimeout(this.$$applyAsyncId);
+  if (this.$root.$$applyAsyncId) {
+    clearTimeout(this.$root.$$applyAsyncId);
     this.$$flushApplyAsync();
   }
   // do at least one pass, then another only if dirty is true, meaning at least
@@ -281,7 +281,7 @@ Scope.prototype.$$everyScope = function(fn) {
     // native every to $$children, significa true se cb da true su tutti i child
       // function(child) { return child.$$everyScope(fn)};
         // per ogni child richiamo $$everyScope
-      return this.$$children.every( function(child) { return child.$$everyScope(fn) });
+      return this.$$children.every( function(child) { return child.$$everyScope(fn); });
   } else {
     return false;
   }
@@ -374,8 +374,8 @@ Scope.prototype.$applyAsync = function(expr) {
     self.$eval(expr);
   });
 	
-  if (self.$$applyAsyncId === null) {
-    self.$$applyAsyncId = setTimeout(function() {
+  if (self.$root.$$applyAsyncId === null) {
+    self.$root.$$applyAsyncId = setTimeout(function() {
       self.$apply(_.bind(self.$$flushApplyAsync, self));
     }, 0);
   }
@@ -392,7 +392,7 @@ Scope.prototype.$$flushApplyAsync = function() {
       console.error(e);
     }
   }
-  this.$$applyAsyncId = null;
+  this.$root.$$applyAsyncId = null;
 };
 
 Scope.prototype.$$postDigest = function(fn) {
@@ -418,7 +418,7 @@ Scope.prototype.$new = function(isolated) {
   // think of $new as Scope: put here the instance properties; you added $$children in Scope, do the same here
   child.$$children = [];
   return child;
-}
+};
 
 
 
